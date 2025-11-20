@@ -14,10 +14,10 @@ type LogEntry struct {
 
 // Logger — кольцевой лог с дозаписью на диск
 type Logger struct {
-	mu     sync.Mutex
-	buffer []LogEntry
-	head   int
-	full   bool
+	mu      sync.Mutex
+	buffer  []LogEntry
+	head    int
+	full    bool
 	logFile string
 	maxSize int64
 }
@@ -112,4 +112,27 @@ func (l *Logger) LoadFromDisk() ([]LogEntry, error) {
 		entries = append(entries, e)
 	}
 	return entries, nil
+}
+
+func (l *Logger) AddEntry(entry LogEntry) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
+	l.buffer[l.head] = entry
+	l.head = (l.head + 1) % len(l.buffer)
+	if l.head == 0 {
+		l.full = true
+	}
+}
+
+// LoadIntoBuffer загружает все записи с диска в кольцевой буфер
+func (l *Logger) LoadIntoBuffer() error {
+    entries, err := l.LoadFromDisk()
+    if err != nil {
+        return err
+    }
+    for _, e := range entries {
+        l.AddEntry(e) // добавляем только в буфер, не пишем на диск
+    }
+    return nil
 }
