@@ -1,6 +1,6 @@
 package config
 
 const (
-	LogFileName = "ringlog.gob";
+	LogFileName = "/app/data/ringlog.gob";
 	GMT = 4;
 )
