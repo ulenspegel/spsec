@@ -3,7 +3,6 @@ package app
 import (
     "fmt"
     "time"
-
     "spsec/config"
 )
 
@@ -20,17 +19,18 @@ func (a *App) handleHeartbeat(ts int64) {
     defer a.mu.Unlock()
 
     a.lastMsgTime = time.Unix(ts, 0)
-
     if a.srv.LastState == nil {
         return
     }
 
     state := *a.srv.LastState
 
-    if state != a.lastHeartbeatState {
+    restored := a.lastHeartbeatState == 2 && state != 2 // сигнал восстановился после "нет сигнала"
+
+    if state != a.lastHeartbeatState || restored {
         a.lastHeartbeatState = state
 
-        if a.lastState == 2 && state != 2 {
+        if restored {
             now := time.Now().UTC().Add(time.Duration(config.GMT) * time.Hour)
             a.bot.UpdatePanel(fmt.Sprintf(
                 "[%s] ✅ Сигнал восстановлен (%s)",
@@ -42,3 +42,4 @@ func (a *App) handleHeartbeat(ts int64) {
         a.notifyState(state)
     }
 }
+
