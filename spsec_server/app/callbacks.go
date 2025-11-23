@@ -22,11 +22,13 @@ func (a *App) initCallbacks() {
 		last := entries[0]
 		localTime := last.Time.UTC().Add(time.Duration(config.GMT) * time.Hour)
 
+		
 		return fmt.Sprintf(
 			"Последнее событие: %s - %s",
 			localTime.Format("02.01 15:04:05"),
 			a.stateToStr(last.State),
 		)
+		
 	}
 
 	a.bot.OnModeChange = func(mid int) {

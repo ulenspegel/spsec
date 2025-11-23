@@ -16,7 +16,8 @@ func (b *Bot) handleCommand(msg *tgbotapi.Message) {
 
     case "status":
         if b.OnStatus != nil {
-            b.Send(b.OnStatus())
+            b.OnStatus();
+            //b.Send(b.OnStatus())
         }
 
     case "mode":
