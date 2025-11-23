@@ -22,9 +22,15 @@ func (a *App) watchdog() {
 }
 
 func (a *App) triggerTimeout() {
-    if a.lastState == 2 {
+    a.mu.Lock()
+    defer a.mu.Unlock()
+
+    if a.lastHeartbeatState == 2 {
         return
     }
+
+    a.lastHeartbeatState = 2
+    a.lastState = 2 // если ты используешь lastState где-то отдельно
 
     a.notifyState(2)
 
@@ -34,3 +40,4 @@ func (a *App) triggerTimeout() {
         now.Format("02.01 15:04:05"),
     ))
 }
+

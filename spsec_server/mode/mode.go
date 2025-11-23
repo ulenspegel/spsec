@@ -23,26 +23,12 @@ func (SilentMode) OnState(state int) {
 }
 
 func (SilentMode) Name() string {
-	return "silent"
+	return "🔕 тихий"
 }
 
 func NewSilent() Mode {
 	return SilentMode{}
 }
-
-
-// func stateToString(state int) string {
-// 	switch state {
-// 	case 0:
-// 		return "Закрыто"
-// 	case 1:
-// 		return "Открыто"
-// 	case 2:
-// 		return "Не в сети"
-// 	default:
-// 		return "Бля"
-// 	}
-// }
 
 type Broadcaster interface {
 	Broadcast(msg string)
@@ -64,17 +50,8 @@ func (a *AlarmMode) OnState(state int) {
 }
 
 func (a *AlarmMode) Name() string {
-	return "alarm"
+	return "🚨 активный"
 }
-
-
-
-
-
-
-
-
-
 
 
 type ScheduleMode struct {
@@ -106,5 +83,5 @@ func (m *ScheduleMode) OnState(state int) {
 }
 
 func (m *ScheduleMode) Name() string {
-	return "schedule"
+	return "⏰ по расписанию"
 }

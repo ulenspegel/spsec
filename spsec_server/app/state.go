@@ -7,7 +7,8 @@ import (
 )
 
 func (a *App) stateToStr(s int) string {
-    names := []string{"закрыто", "открыто", "нет сигнала", "ошибка"}
+    
+    names := []string{"🚪закрыта ✅", "🚪открыта 🛑", "⚠️ нет сети", "📶 сеть восстановлена"}
     if s >= 0 && s < len(names) {
         return names[s]
     }
@@ -25,11 +26,10 @@ func (a *App) handleHeartbeat(ts int64) {
 
     state := *a.srv.LastState
 
-    restored := a.lastHeartbeatState == 2 && state != 2 // сигнал восстановился после "нет сигнала"
-
+    restored := a.lastHeartbeatState == 2 && state != 2
     if state != a.lastHeartbeatState || restored {
         a.lastHeartbeatState = state
-
+    
         if restored {
             now := time.Now().UTC().Add(time.Duration(config.GMT) * time.Hour)
             a.bot.UpdatePanel(fmt.Sprintf(
@@ -38,8 +38,10 @@ func (a *App) handleHeartbeat(ts int64) {
                 a.stateToStr(state),
             ))
         }
-
+    
         a.notifyState(state)
     }
+    
 }
+
 
