@@ -41,27 +41,32 @@ func (s *Server) HandleDigit(w http.ResponseWriter, r *http.Request) {
 	}
 
 	state, _ := strconv.Atoi(digit)
-
-	// ★ фикс: timestamp реального прихода
 	ts := time.Now().Unix()
 
-	// ★ фикс: присылаем heartbeat при каждом реальном сообщении
+	// Heartbeat всегда
 	if s.OnHeartbeat != nil {
 		s.OnHeartbeat(ts)
 	}
 
-	// Если состояние изменилось — отправляем OnNewState
+	// Проверяем, был ли сигнал ранее потерян
+	wasNoSignal := s.LastState != nil && *s.LastState == 2
+
+	// Если состояние изменилось — вызываем OnNewState
 	if s.LastState == nil || *s.LastState != state {
 		if s.OnNewState != nil {
 			s.OnNewState(state, ts)
 		}
-
-		// обновляем last state
 		s.LastState = &state
 		log.Printf("New state received: %d", state)
+	} else if wasNoSignal && (state == 0 || state == 1) {
+		// Сигнал восстановлен, даже если state не изменился
+		if s.OnNewState != nil {
+			s.OnNewState(state, ts)
+		}
+		s.LastState = &state
+		log.Printf("Signal restored: %d", state)
 	}
 
-	// ответ клиенту
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintf(w, "OK: %s\n", digit)
 }
