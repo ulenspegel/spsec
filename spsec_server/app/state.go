@@ -2,6 +2,7 @@ package app
 
 import (
     "fmt"
+    "log"
     "time"
     "spsec/config"
 )
@@ -20,28 +21,36 @@ func (a *App) handleHeartbeat(ts int64) {
     defer a.mu.Unlock()
 
     a.lastMsgTime = time.Unix(ts, 0)
-    if a.srv.LastState == nil {
-        return
-    }
 
-    state := *a.srv.LastState
+    // Если были в состоянии "нет сигнала" (2), а теперь получили heartbeat
+    if a.lastState == 2 {
+        // Но состояние двери известно через lastHeartbeatState (0 или 1)
+        restoredState := a.lastHeartbeatState
 
-    restored := a.lastHeartbeatState == 2 && state != 2
-    if state != a.lastHeartbeatState || restored {
-        a.lastHeartbeatState = state
-    
-        if restored {
-            now := time.Now().UTC().Add(time.Duration(config.GMT) * time.Hour)
-            a.bot.UpdatePanel(fmt.Sprintf(
-                "[%s] ✅ Сигнал восстановлен (%s)",
-                now.Format("02.01 15:04:05"),
-                a.stateToStr(state),
-            ))
-        }
-    
-        a.notifyState(state)
+        // Обновляем внутреннее состояние
+        a.notifyState(restoredState)
+
+        now := time.Now().UTC().Add(time.Duration(config.GMT) * time.Hour)
+        a.bot.UpdatePanel(fmt.Sprintf(
+            "[%s] ✅ Сигнал восстановлен (%s)",
+            now.Format("02.01 15:04:05"),
+            a.stateToStr(restoredState),
+        ))
     }
-    
+}
+
+func (a *App) handleNewState(state int, ts int64) {
+    a.mu.Lock()
+    defer a.mu.Unlock()
+
+    // Update heartbeat tracking
+    a.lastMsgTime = time.Unix(ts, 0)
+    a.lastHeartbeatState = state
+
+    // Notify about state change
+    a.notifyState(state)
+
+    log.Printf("State change handled: %d -> %d", a.lastState, state)
 }
 
 

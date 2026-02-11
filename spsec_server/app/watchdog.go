@@ -1,43 +1,43 @@
 package app
 
 import (
-    "fmt"
+    // "fmt"
     "time"
 
-    "spsec/config"
+    // "spsec/config"
 )
 
 func (a *App) watchdog() {
     for {
-        time.Sleep(time.Second)
+        time.Sleep(2 * time.Second)
 
         a.mu.Lock()
-        since := time.Since(a.lastMsgTime)
+        last := a.lastMsgTime
         a.mu.Unlock()
 
-        if since > time.Duration(a.timeoutSeconds)*time.Second {
+        if time.Since(last) > 5*time.Second {
             a.triggerTimeout()
         }
     }
 }
 
+
 func (a *App) triggerTimeout() {
     a.mu.Lock()
     defer a.mu.Unlock()
 
+    // Если уже был оффлайн — повторно не тревожим
     if a.lastHeartbeatState == 2 {
         return
     }
 
     a.lastHeartbeatState = 2
-    a.lastState = 2 // если ты используешь lastState где-то отдельно
 
-    a.notifyState(2)
+    // Панель обновляем через notifyState
+    a.notifyState(a.lastState)
 
-    now := time.Now().UTC().Add(time.Duration(config.GMT) * time.Hour)
-    a.bot.UpdatePanel(fmt.Sprintf(
-        "[%s] ⚠️ Потеря сигнала",
-        now.Format("02.01 15:04:05"),
-    ))
+    // ОТДЕЛЬНЫМ сообщением — тревога!!!
+    a.bot.Send("⚠️ Потеря сигнала")
 }
+
 

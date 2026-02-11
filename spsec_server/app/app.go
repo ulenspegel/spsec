@@ -50,6 +50,10 @@ func New(log *logger.Logger, srv *serv.Server, bot *bot.Bot, initial mode.Mode) 
     }
 
     a.initCallbacks()
+    
+    // Set up state change handler
+    a.srv.OnNewState = a.handleNewState
+    
     return a
 }
 
